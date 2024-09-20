@@ -23,9 +23,15 @@ OR "SUGCC" OTHERWISE
 PLEASE ONLY OPEN THIS FILE WITH POWERSHELL ISE AS POWERSHELL/CMD DO NOT SUPPORT DISPLAYING HEBREW WITH ACTIVE DIRECTORY QUERIES SPECIFICALLY
 #>
 
+$global:path = "C:\rsharon_csv"
+
+function Update-CSV{
 Import-Module ActiveDirectory
-$global:users = Get-ADUser -Filter {Enabled -eq $True} -Properties mailNickname, GivenName, DisplayName, CN, MobilePhone, emailAddress
-$global:computers = Get-ADComputer -Filter *
+$users = Get-ADUser -Filter {Enabled -eq $True} -Properties mailNickname, GivenName, DisplayName, CN, MobilePhone, emailAddress
+$users | Select-Object mailNickname, GivenName, DisplayName, CN, MobilePhone, emailAddress| Export-CSV -path "$global:path\user_db.csv" -NoTypeInformation
+$computers = Get-ADComputer -Filter * -Properties IP
+$computers | Select-Object Name, IP| Export-CSV -path "$global:path\computer_db.csv" -NoTypeInformation # not actually sure if AD stores IP like that
+}
 
 function Select-ValidNumber{
     param(
@@ -59,7 +65,11 @@ function rsharon{
     while($True){
         $userInput = Read-Host -Prompt "Enter the user's name [Hebrew or English]"
         $userInput = "*"+$userInput+"*"
-        $userList = $global:users | Where-Object {$_.Name -like $userInput -or $_.SamAccountName -like $userInput -or $_.mailNickname -like $userInput -or $_.GivenName -like $userInput -or $_.DisplayName -like $userInput -or $_.CN -like $userInput}
+        $userList = Import-Csv -path "$global:path\user_db" | Where-Object {
+            $_.Name -like $userInput -or $_.SamAccountName -like $userInput
+            -or $_.mailNickname -like $userInput -or $_.GivenName -like $userInput
+            -or $_.DisplayName -like $userInput -or $_.CN -like $userInput
+        }
         $userCounter=1
         $userArray = @()
 
@@ -94,8 +104,12 @@ function rsharon{
     $userConnectedUnderscore = "*" + $userConnected +"_*"
     $userConnectedDash = "*" + $userConnected +"-*"
     $user = "*" + $user + "*"
-    $computerList = $global:computers | Where-Object {$_.Name -like $user -or $_.Name -like $user1 -or $_.Name -like $user2 -or $_.Name -like $user3 -or $_.Name -like $userDash -or $_.Name -like $userConnectedUnderscore -or $_.Name -like $userConnectedDash}
-
+    $computerList = Import-Csv -path "$global:path\user_db" | Where-Object {
+        $_.Name -like $user -or $_.Name -like $user1 -or $_.Name -like $user2
+        -or $_.Name -like $user3 -or $_.Name -like $userDash
+        -or $_.Name -like $userConnectedUnderscore -or $_.Name -like $userConnectedDash
+    }
+    
     $computerArray = @()
     $computerCounter=1
     foreach ($computer in $computerList) {
@@ -131,3 +145,5 @@ function rsharon{
     $id = quser /server:$selectedComputer | ForEach-Object { $_ -replace '\s+', ' ' } | Select-Object -Skip 1 | ForEach-Object { $_.Split()[3] }
     mstsc /shadow:$id /v:$selectedComputer /control
 }
+
+Update-CSV
