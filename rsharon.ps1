@@ -1,12 +1,13 @@
 <#
+VERSION 1.3.2
+NOW STORES THE ACTIVEDIRECTORY INFORMATION WITHININ A USER-ENCRYPTED FOLDER AS A CSV FILE AND THEN QUERIES UPON THAT SAVED INFO
+-----
 VERSION 1.3.1
 QUALITY OF LIFE CHANGES INCLUDING THE OPTION TO SEARCH AGAIN AT ANY STAGE AND EXIT WITHOUT CTRL+C AND ERROR HANDLING AND PREVENTION
-
+-----
 VERSION 1.3
-
 NOW USES SYSTEM.NET.SOCKETS.TCPCLIENT INSTEAD OF TEST-NETCONNECTION; WHICH IS MORE BARE BONES BUT FAR FASTER, PERFECT FOR SIMPLY TESTING AN OPEN PORT
 USING THIS .NET FUNCTION ALSO ENABLES USING ASYNCWAITHANDLE WHICH TERMINATES THE PROCESS IF IT TAKES MORE THAN A SECOND, REDUCING THE RUNTIME SIGNIFICANTLY
-
 -----
 VERSION 1.2
 NOW CREATES A LIST OF ALL USERS AND ALL COMPUTERS WHEN FIRST RAN INSTEAD OF QUERYING ACTIVE-DIRECTORY EVERY TIME THE FUNCTION IS CALLED
@@ -22,16 +23,6 @@ OR "SUGCC" OTHERWISE
 
 PLEASE ONLY OPEN THIS FILE WITH POWERSHELL ISE AS POWERSHELL/CMD DO NOT SUPPORT DISPLAYING HEBREW WITH ACTIVE DIRECTORY QUERIES SPECIFICALLY
 #>
-
-$global:path = "C:\rsharon_csv"
-
-function Update-CSV{
-Import-Module ActiveDirectory
-$users = Get-ADUser -Filter {Enabled -eq $True} -Properties mailNickname, GivenName, DisplayName, CN, MobilePhone, emailAddress
-$users | Select-Object mailNickname, GivenName, DisplayName, CN, MobilePhone, emailAddress| Export-CSV -path "$global:path\user_db.csv" -NoTypeInformation
-$computers = Get-ADComputer -Filter * -Properties IP
-$computers | Select-Object Name, IP| Export-CSV -path "$global:path\computer_db.csv" -NoTypeInformation # not actually sure if AD stores IP like that
-}
 
 function Select-ValidNumber{
     param(
@@ -65,11 +56,7 @@ function rsharon{
     while($True){
         $userInput = Read-Host -Prompt "Enter the user's name [Hebrew or English]"
         $userInput = "*"+$userInput+"*"
-        $userList = Import-Csv -path "$global:path\user_db" | Where-Object {
-            $_.Name -like $userInput -or $_.SamAccountName -like $userInput
-            -or $_.mailNickname -like $userInput -or $_.GivenName -like $userInput
-            -or $_.DisplayName -like $userInput -or $_.CN -like $userInput
-        }
+        $userList = Import-Csv -path "$global:path\user_db.csv" | Where-Object {$_.Name -like $userInput -or $_.SamAccountName -like $userInput -or $_.mailNickname -like $userInput -or $_.GivenName -like $userInput -or $_.DisplayName -like $userInput -or $_.CN -like $userInput}
         $userCounter=1
         $userArray = @()
 
@@ -79,7 +66,11 @@ function rsharon{
             $userArrayObject | Add-Member -MemberType NoteProperty -Name "Username" -Value $user.SamAccountName
             $userArrayObject | Add-Member -MemberType NoteProperty -Name "Phone Number" -Value $user.MobilePhone
             $userArrayObject | Add-Member -MemberType NoteProperty -Name "Email Address" -Value $user.emailAddress
-            $userArrayObject | Add-Member -MemberType NoteProperty -Name "Full Name" -Value $user.DisplayName
+            $displayName = $user.DisplayName
+            if($host.Name -eq "ConsoleHost"){
+                $displayName = -join ($displayName[-1..-$displayName.Length])
+            }
+            $userArrayObject | Add-Member -MemberType NoteProperty -Name "Full Name" -Value $displayName
             $userArray += $userArrayObject
             $userCounter++
         }
@@ -104,11 +95,7 @@ function rsharon{
     $userConnectedUnderscore = "*" + $userConnected +"_*"
     $userConnectedDash = "*" + $userConnected +"-*"
     $user = "*" + $user + "*"
-    $computerList = Import-Csv -path "$global:path\user_db" | Where-Object {
-        $_.Name -like $user -or $_.Name -like $user1 -or $_.Name -like $user2
-        -or $_.Name -like $user3 -or $_.Name -like $userDash
-        -or $_.Name -like $userConnectedUnderscore -or $_.Name -like $userConnectedDash
-    }
+    $computerList = Import-Csv -path "$global:path\computer_db.csv" | Where-Object {$_.Name -like $user -or $_.Name -like $user1 -or $_.Name -like $user2 -or $_.Name -like $user3 -or $_.Name -like $userDash -or $_.Name -like $userConnectedUnderscore -or $_.Name -like $userConnectedDash}
     
     $computerArray = @()
     $computerCounter=1
@@ -141,9 +128,11 @@ function rsharon{
         return
     }
     $selectedComputer = ($computerArray | Where-Object {$_.Number -eq $computerInput} | Select-Object Name).Name
-
     $id = quser /server:$selectedComputer | ForEach-Object { $_ -replace '\s+', ' ' } | Select-Object -Skip 1 | ForEach-Object { $_.Split()[3] }
-    mstsc /shadow:$id /v:$selectedComputer /control
+    try{
+        mstsc /shadow:$id /v:$selectedComputer /control
+    }
+    catch{
+        Write-Host "Couldn't connect to $selectedComputer ... This is probably because access is limited"
+    }
 }
-
-Update-CSV
