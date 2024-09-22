@@ -1,28 +1,4 @@
-<#
-VERSION 1.3.2
-NOW STORES THE ACTIVEDIRECTORY INFORMATION WITHININ A USER-ENCRYPTED FOLDER AS A CSV FILE AND THEN QUERIES UPON THAT SAVED INFO
------
-VERSION 1.3.1
-QUALITY OF LIFE CHANGES INCLUDING THE OPTION TO SEARCH AGAIN AT ANY STAGE AND EXIT WITHOUT CTRL+C AND ERROR HANDLING AND PREVENTION
------
-VERSION 1.3
-NOW USES SYSTEM.NET.SOCKETS.TCPCLIENT INSTEAD OF TEST-NETCONNECTION; WHICH IS MORE BARE BONES BUT FAR FASTER, PERFECT FOR SIMPLY TESTING AN OPEN PORT
-USING THIS .NET FUNCTION ALSO ENABLES USING ASYNCWAITHANDLE WHICH TERMINATES THE PROCESS IF IT TAKES MORE THAN A SECOND, REDUCING THE RUNTIME SIGNIFICANTLY
------
-VERSION 1.2
-NOW CREATES A LIST OF ALL USERS AND ALL COMPUTERS WHEN FIRST RAN INSTEAD OF QUERYING ACTIVE-DIRECTORY EVERY TIME THE FUNCTION IS CALLED
-
-VERSION 1.1
-NOW CHECKS IF EACH QUERIED PC ACCEPTS A TCP CONNECTION (AND THUS WILL SUPPORT THE RDP), IF NOT IT IS OMITTED FROM THE LIST
------
-THIS CODE WAS WRITTEN BY SAHAR TICHOVER
-IT IS STILL UNDER DEVELOPMENT, SOME FEATURES ARE MISSING
-
-TYPE EITHER "RDPC" IF YOU KNOW THE PC'S IP/NAME
-OR "SUGCC" OTHERWISE
-
-PLEASE ONLY OPEN THIS FILE WITH POWERSHELL ISE AS POWERSHELL/CMD DO NOT SUPPORT DISPLAYING HEBREW WITH ACTIVE DIRECTORY QUERIES SPECIFICALLY
-#>
+<# THIS CODE WAS WRITTEN BY SAHAR TICHOVER #>
 
 function Select-ValidNumber{
     param(
@@ -53,10 +29,16 @@ function Select-ValidNumber{
 }
 
 function rsharon{
+    if(Test-Path -path )
     while($True){
         $userInput = Read-Host -Prompt "Enter the user's name [Hebrew or English]"
         $userInput = "*"+$userInput+"*"
-        $userList = Import-Csv -path "$global:path\user_db.csv" | Where-Object {$_.Name -like $userInput -or $_.SamAccountName -like $userInput -or $_.mailNickname -like $userInput -or $_.GivenName -like $userInput -or $_.DisplayName -like $userInput -or $_.CN -like $userInput}
+        $userList = Import-Csv -path "$global:path\user_db.csv" |
+            Where-Object {
+                $_.Name -like $userInput -or $_.SamAccountName -like $userInput -or
+                $_.mailNickname -like $userInput -or $_.GivenName -like $userInput -or
+                $_.DisplayName -like $userInput -or $_.CN -like $userInput
+            }
         $userCounter=1
         $userArray = @()
 
@@ -95,8 +77,13 @@ function rsharon{
     $userConnectedUnderscore = "*" + $userConnected +"_*"
     $userConnectedDash = "*" + $userConnected +"-*"
     $user = "*" + $user + "*"
-    $computerList = Import-Csv -path "$global:path\computer_db.csv" | Where-Object {$_.Name -like $user -or $_.Name -like $user1 -or $_.Name -like $user2 -or $_.Name -like $user3 -or $_.Name -like $userDash -or $_.Name -like $userConnectedUnderscore -or $_.Name -like $userConnectedDash}
-    
+    $computerList = Import-Csv -path "$global:path\computer_db.csv" |
+        Where-Object {
+            $_.Name -like $user -or $_.Name -like $user1 -or
+            $_.Name -like $user2 -or $_.Name -like $user3 -or
+            $_.Name -like $userDash -or $_.Name -like $userConnectedUnderscore
+            -or $_.Name -like $userConnectedDash
+        }
     $computerArray = @()
     $computerCounter=1
     foreach ($computer in $computerList) {
