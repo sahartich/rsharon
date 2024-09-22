@@ -29,7 +29,9 @@ function Select-ValidNumber{
 }
 
 function rsharon{
-    if(Test-Path -path )
+   if(-Not (Test-Path "C:\rsharon_csv\user_db.csv") -or -Not (Test-Path "C:\rsharon_csv\computer_db.csv")){
+        Update-CSV
+    }
     while($True){
         $userInput = Read-Host -Prompt "Enter the user's name [Hebrew or English]"
         $userInput = "*"+$userInput+"*"
