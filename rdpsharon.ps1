@@ -18,7 +18,8 @@ function rdpsharon{
         mstsc /shadow:$id /v:$computer /control
     }
     catch{
-        
+        Write-Host "Unexpected Error" -ForegroundColor Red
+        exit
     }
 }
 

@@ -13,6 +13,6 @@ if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
     exit
 }
 
-Move-Item -path "$originPath\rsharon.ps1" -Destination "$destinationPath\rsharon"
-Move-Item -path "$originPath\rdpsharon.ps1" -Destination "$destinationPath\rsharon"
+Move-Item -path "$originPath\rsharon.ps1" -Destination "$destinationPath\rsharon" -Force
+Move-Item -path "$originPath\rdpsharon.ps1" -Destination "$destinationPath\rsharon" -Force
 Remove-Item -path $PSCommandPath -Force

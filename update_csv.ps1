@@ -7,9 +7,11 @@ function Update-CSV{
         cipher /e /s:$global:path
     }
     $users = Get-ADUser -Filter {Enabled -eq $True} -Properties mailNickname, GivenName, DisplayName, CN, MobilePhone, emailAddress, SamAccountName
-    $users | Select-Object mailNickname, GivenName, DisplayName, CN, MobilePhone, emailAddress,SamAccountName| Export-CSV -path "$global:path\user_db.csv" -NoTypeInformation -Encoding UTF8
+    $users | Select-Object mailNickname, GivenName, DisplayName, CN, MobilePhone, emailAddress,SamAccountName |
+        Export-CSV -path "$global:path\user_db.csv" -NoTypeInformation -Encoding UTF8 -Force
     $computers = Get-ADComputer -Filter *
-    $computers | Select-Object Name | Export-CSV -path "$global:path\computer_db.csv" -NoTypeInformation -Encoding UTF8
+    $computers | Select-Object Name |
+        Export-CSV -path "$global:path\computer_db.csv" -NoTypeInformation -Encoding UTF8 -Force
 
 }
 
