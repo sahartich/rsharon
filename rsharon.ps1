@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <#
 VERSION 1.3.1
 QUALITY OF LIFE CHANGES INCLUDING THE OPTION TO SEARCH AGAIN AT ANY STAGE AND EXIT WITHOUT CTRL+C AND ERROR HANDLING AND PREVENTION
@@ -21,6 +22,9 @@ PLEASE ONLY OPEN THIS FILE WITH POWERSHELL ISE AS POWERSHELL/CMD DO NOT SUPPORT 
 Import-Module ActiveDirectory
 $global:users = Get-ADUser -Filter {Enabled -eq $True} -Properties mailNickname, GivenName, DisplayName, CN, MobilePhone, emailAddress
 $global:computers = Get-ADComputer -Filter *
+=======
+<# THIS CODE WAS WRITTEN BY SAHAR TICHOVER #>
+>>>>>>> development
 
 function Select-ValidNumber{
     param(
@@ -51,10 +55,18 @@ function Select-ValidNumber{
 }
 
 function rsharon{
+   if(-Not (Test-Path "C:\rsharon_csv\user_db.csv") -or -Not (Test-Path "C:\rsharon_csv\computer_db.csv")){
+        Update-CSV
+    }
     while($True){
         $userInput = Read-Host -Prompt "Enter the user's name [Hebrew or English]"
         $userInput = "*"+$userInput+"*"
-        $userList = $global:users | Where-Object {$_.Name -like $userInput -or $_.SamAccountName -like $userInput -or $_.mailNickname -like $userInput -or $_.GivenName -like $userInput -or $_.DisplayName -like $userInput -or $_.CN -like $userInput}
+        $userList = Import-Csv -path "$global:path\user_db.csv" |
+            Where-Object {
+                $_.Name -like $userInput -or $_.SamAccountName -like $userInput -or
+                $_.mailNickname -like $userInput -or $_.GivenName -like $userInput -or
+                $_.DisplayName -like $userInput -or $_.CN -like $userInput
+            }
         $userCounter=1
         $userArray = @()
 
@@ -64,7 +76,11 @@ function rsharon{
             $userArrayObject | Add-Member -MemberType NoteProperty -Name "Username" -Value $user.SamAccountName
             $userArrayObject | Add-Member -MemberType NoteProperty -Name "Phone Number" -Value $user.MobilePhone
             $userArrayObject | Add-Member -MemberType NoteProperty -Name "Email Address" -Value $user.emailAddress
-            $userArrayObject | Add-Member -MemberType NoteProperty -Name "Full Name" -Value $user.DisplayName
+            $displayName = $user.DisplayName
+            if($host.Name -eq "ConsoleHost"){
+                $displayName = -join ($displayName[-1..-$displayName.Length])
+            }
+            $userArrayObject | Add-Member -MemberType NoteProperty -Name "Full Name" -Value $displayName
             $userArray += $userArrayObject
             $userCounter++
         }
@@ -89,8 +105,13 @@ function rsharon{
     $userConnectedUnderscore = "*" + $userConnected +"_*"
     $userConnectedDash = "*" + $userConnected +"-*"
     $user = "*" + $user + "*"
-    $computerList = $global:computers | Where-Object {$_.Name -like $user -or $_.Name -like $user1 -or $_.Name -like $user2 -or $_.Name -like $user3 -or $_.Name -like $userDash -or $_.Name -like $userConnectedUnderscore -or $_.Name -like $userConnectedDash}
-
+    $computerList = Import-Csv -path "$global:path\computer_db.csv" |
+        Where-Object {
+            $_.Name -like $user -or $_.Name -like $user1 -or
+            $_.Name -like $user2 -or $_.Name -like $user3 -or
+            $_.Name -like $userDash -or $_.Name -like $userConnectedUnderscore
+            -or $_.Name -like $userConnectedDash
+        }
     $computerArray = @()
     $computerCounter=1
     foreach ($computer in $computerList) {
@@ -122,7 +143,11 @@ function rsharon{
         return
     }
     $selectedComputer = ($computerArray | Where-Object {$_.Number -eq $computerInput} | Select-Object Name).Name
-
     $id = quser /server:$selectedComputer | ForEach-Object { $_ -replace '\s+', ' ' } | Select-Object -Skip 1 | ForEach-Object { $_.Split()[3] }
-    mstsc /shadow:$id /v:$selectedComputer /control
+    try{
+        mstsc /shadow:$id /v:$selectedComputer /control
+    }
+    catch{
+        Write-Host "Couldn't connect to $selectedComputer ... This is probably because access is limited"
+    }
 }
