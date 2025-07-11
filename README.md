@@ -1,31 +1,49 @@
--------------------------------------------------
------THIS CODE WAS WRITTEN BY SAHAR TICHOVER-----
--------------------------------------------------
+----- Script by Sahar Tichover -----
 
-TYPE RSHARON TO FIND THE COMPUTER NAME AND CONNECT TO IT
-IF YOU KNOW THE NAME OF THE COMPUTER TYPE RDPSHARON INSTEAD
+Usage Instructions
 
-1. THE CODE UPDATES THE CSV FILES AUTOMATICALLY
-2. QUERIES UPON THE STORED CSV FILES TO FIND THE RELEVANT COMPUTERS
-3. CHECKS WHICH OF THOSE COMPUTERS ARE AVAILABLE FOR AN RDP CONNECTION
-4. PROMPTS TO CHOOSE THE RELEVANT COMPUTER TO CONNECT TO
+Type RSHARON to search for a computer by name and connect to it.
 
-VERSION 1.3.3
-CREATED SEVERAL FILES TO IMPROVE READABILITY AND BREAK DOWN THE CODE FURTHER FOR MORE OPTIMIZED AND FLEXIBLE USE
------
-VERSION 1.3.2
-NOW STORES THE ACTIVEDIRECTORY INFORMATION WITHININ A USER-ENCRYPTED FOLDER AS A CSV FILE AND THEN QUERIES UPON THAT SAVED INFO
------
-VERSION 1.3.1
-QUALITY OF LIFE CHANGES INCLUDING THE OPTION TO SEARCH AGAIN AT ANY STAGE AND EXIT WITHOUT CTRL+C AND ERROR HANDLING AND PREVENTION
------
-VERSION 1.3
-NOW USES SYSTEM.NET.SOCKETS.TCPCLIENT INSTEAD OF TEST-NETCONNECTION; WHICH IS MORE BARE BONES BUT FAR FASTER, PERFECT FOR SIMPLY TESTING AN OPEN PORT
-USING THIS .NET FUNCTION ALSO ENABLES USING ASYNCWAITHANDLE WHICH TERMINATES THE PROCESS IF IT TAKES MORE THAN A SECOND, REDUCING THE RUNTIME SIGNIFICANTLY
------
-VERSION 1.2
-NOW CREATES A LIST OF ALL USERS AND ALL COMPUTERS WHEN FIRST RAN INSTEAD OF QUERYING ACTIVE-DIRECTORY EVERY TIME THE FUNCTION IS CALLED
------
-VERSION 1.1
-NOW CHECKS IF EACH QUERIED PC ACCEPTS A TCP CONNECTION (AND THUS WILL SUPPORT THE RDP), IF NOT IT IS OMITTED FROM THE LIST
------
+If you already know the computer name, type RDPSHARON to connect directly.
+
+🔄 Functionality Overview
+Automatically updates CSV files with relevant data.
+
+Queries local CSV files to locate target computers.
+
+Checks which computers are online and accepting RDP (TCP port 3389) connections.
+
+Prompts the user to select an available computer to connect to.
+
+🛠️ Version History & Changes
+v1.3.3
+
+Refactored into multiple smaller files for improved readability, modularity, and easier maintenance.
+
+v1.3.2
+
+Active Directory data is now saved in an encrypted user folder as a CSV file and queried locally for faster access.
+
+v1.3.1
+
+Quality-of-life improvements:
+
+Ability to search again at any point.
+
+Clean exit without using Ctrl+C.
+
+Improved error handling.
+
+v1.3
+
+Replaced Test-NetConnection with .NET's System.Net.Sockets.TcpClient for faster and more efficient port checking.
+
+Implemented AsyncWaitHandle to timeout after 1 second, significantly reducing total runtime.
+
+v1.2
+
+On first run, the script creates a complete list of all users and computers from Active Directory, eliminating the need for repeated queries.
+
+v1.1
+
+Checks each computer to ensure it accepts TCP connections on the RDP port before listing it as available.
